@@ -1,0 +1,16 @@
+[
+{
+  "modid": "discordbot",
+  "name": "Discord Bot",
+  "description": "Chat synchronizer for discord",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["_Amendil_"],
+  "credits": "_Amendil_",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
