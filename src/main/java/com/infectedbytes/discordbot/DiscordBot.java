@@ -11,6 +11,9 @@ import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.webhook.WebhookClient;
+import net.dv8tion.jda.webhook.WebhookClientBuilder;
+import net.dv8tion.jda.webhook.WebhookMessageBuilder;
 import net.minecraft.entity.player.EntityPlayerMP;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
@@ -31,6 +34,7 @@ public class DiscordBot {
     private Configuration config;
     private JDA jda;
     private TextChannel chatChannel;
+    private WebhookClient client;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent e) {
@@ -57,6 +61,7 @@ public class DiscordBot {
             jda = new JDABuilder(AccountType.BOT).setToken(Settings.token).buildBlocking();
             jda.addEventListener(new DiscordForwarder());
             chatChannel = jda.getTextChannelById(Settings.channelId);
+            client = new WebhookClientBuilder(Settings.webhook).build();
             updatePlayerList(null);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -67,6 +72,10 @@ public class DiscordBot {
     }
 
     private void shutdownDiscord() {
+        if(client != null) {
+            client.close();
+            client = null;
+        }
         if(jda != null) {
             jda.shutdownNow();
             jda = null;
@@ -109,9 +118,15 @@ public class DiscordBot {
     public class MinecraftForwarder {
         @SubscribeEvent(priority = EventPriority.LOWEST)
         public void onChatEvent(ServerChatEvent e) {
-            if (chatChannel == null) return;
-            String msg = Settings.Messages.formatFromMinecraft(e.username, e.message);
-            if (msg != null) chatChannel.sendMessage(msg).queue();
+            if (chatChannel == null || e.player == null || client == null) return;
+            try {
+                client.send(new WebhookMessageBuilder()
+                        .setAvatarUrl("https://crafatar.com/renders/head/" + e.player.getUniqueID().toString())
+                        .setUsername(e.username)
+                        .setContent(e.message).build());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -119,6 +134,7 @@ public class DiscordBot {
         @Override
         public void onMessageReceived(MessageReceivedEvent event) {
             if (event.getAuthor().isBot()) return;
+            if (event.getChannel().getIdLong() != Settings.channelId) return;
             String msg = Settings.Messages.formatFromDiscord(event.getAuthor().getName(), event.getMessage().getContentDisplay());
             if (msg != null) sendGlobal(msg);
         }

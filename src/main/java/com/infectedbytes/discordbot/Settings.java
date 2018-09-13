@@ -8,12 +8,12 @@ import java.util.List;
 final class Settings {
     static String token;
     static long channelId;
+    static String webhook;
 
     static class Messages {
         static String empty;
         static String many;
         static String normal;
-        static String fromMinecraft;
         static String fromDiscord;
 
         static String getUsers(List<EntityPlayerMP> users) {
@@ -35,14 +35,6 @@ final class Settings {
             }
         }
 
-        static String formatFromMinecraft(String user, String msg) {
-            try {
-                return String.format(fromMinecraft, user, msg);
-            } catch (Exception ex) {
-                return null;
-            }
-        }
-
         static String formatFromDiscord(String user, String msg) {
             try {
                 return String.format(fromDiscord, user, msg);
@@ -54,13 +46,13 @@ final class Settings {
 
     static void read(Configuration config){
         token = config.get("general", "token", "").getString();
+        webhook = config.get("general", "webhook", "").getString();
         channelId = Long.parseLong(config.get("general", "channelId", "0").getString());
 
         Messages.empty = config.get("messages", "empty", "Server is abandoned").getString();
         Messages.many = config.get("messages", "many", "%d users are currently online").getString();
         Messages.normal = config.get("messages", "normal", "Online: %s").getString();
 
-        Messages.fromMinecraft = config.get("messages", "fromMinecraft", "`%s`: %s").getString();
         Messages.fromDiscord = config.get("messages", "fromDiscord", "[§2Discord§r] %s: %s").getString();
     }
 }
